@@ -1,6 +1,5 @@
 package com.duczxje.screenstreaming.flutter.fragment
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -53,9 +52,7 @@ class FlutterContainerFragment : FlutterFragment(), FlutterContainer {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (resultCode == Activity.RESULT_OK) {
-            processFlutterResult(requestCode, data)
-        }
+        processFlutterResult(requestCode, resultCode, data)
         super.onActivityResult(requestCode, resultCode, data)
     }
 
@@ -90,9 +87,9 @@ class FlutterContainerFragment : FlutterFragment(), FlutterContainer {
         }
     }
 
-    private fun processFlutterResult(code: Int, result: Any?) {
+    private fun processFlutterResult(code: Int, resultCode: Int, resultData: Any?) {
         synchronized(resultReceiverMap) {
-            resultReceiverMap[code]?.onResult(result)
+            resultReceiverMap[code]?.onResult(resultCode, resultData)
             resultReceiverMap.remove(code)
         }
     }

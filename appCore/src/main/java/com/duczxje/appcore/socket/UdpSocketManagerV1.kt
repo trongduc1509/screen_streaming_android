@@ -8,6 +8,8 @@ import java.net.InetAddress
 class UdpSocketManagerV1 : UdpSocketManager {
     private var socket: DatagramSocket? = null
 
+    private var sendSocket: DatagramSocket = DatagramSocket().apply { broadcast = true }
+
     override fun startServer(port: Int, onReady: (ip: String, port: Int) -> Unit) {
         socket = DatagramSocket(port).apply { broadcast = true }
 
@@ -20,7 +22,7 @@ class UdpSocketManagerV1 : UdpSocketManager {
 
     override fun sendBytes(data: ByteArray, ip: String, port: Int) {
         val packet = DatagramPacket(data, data.size, InetAddress.getByName(ip), port)
-        socket?.send(packet)
+        sendSocket.send(packet)
     }
 
     override fun receiveBytes(): ByteArray {

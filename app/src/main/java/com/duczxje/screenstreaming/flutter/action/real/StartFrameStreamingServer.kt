@@ -24,10 +24,9 @@ class StartFrameStreamingServer : FlutterAction, KoinComponent {
         methodResult: MethodChannel.Result
     ) {
         val arguments = methodCall.arguments as Map<*, *>
-        val ip = arguments["ip"] as? String
         val port = arguments["port"] as? Int
 
-        if (ip != null && port != null) {
+        if (port != null) {
             appScope.launchIO {
                 try {
                     signalingControlRepo.startFrameStreamingServer(
@@ -38,9 +37,6 @@ class StartFrameStreamingServer : FlutterAction, KoinComponent {
                            }
                         }
                     )
-                    switchMain {
-                        methodResult.success(null)
-                    }
                 } catch (e: Exception) {
                     e.printStackTrace()
                     switchMain {

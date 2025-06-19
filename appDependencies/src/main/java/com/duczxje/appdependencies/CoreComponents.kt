@@ -6,6 +6,7 @@ import com.duczxje.appcore.capture.CaptureManager
 import com.duczxje.appcore.socket.TcpSocketManager
 import com.duczxje.appcore.socket.TcpSocketManagerV1
 import com.duczxje.appcore.socket.UdpSocketManager
+import com.duczxje.concurrency.AppCoroutineScope
 import org.koin.dsl.module
 
 fun createCoreModule() = module {
@@ -14,7 +15,7 @@ fun createCoreModule() = module {
     }
 
     single<TcpSocketManager> {
-        TcpSocketManagerV1()
+        TcpSocketManagerV1( get<AppCoroutineScope>() )
     }
 
     single<UdpSocketManager> {

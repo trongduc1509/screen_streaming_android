@@ -1,17 +1,24 @@
 package com.duczxje.appcore.socket
 
 import com.duczxje.appcore.utils.getLocalIpAddress
+import com.duczxje.concurrency.AppCoroutineScope
+import com.duczxje.concurrency.launchIO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
 import java.net.ServerSocket
 import java.net.Socket
-import java.net.SocketException
 
-class TcpSocketManagerV1 : TcpSocketManager {
+class TcpSocketManagerV1(
+    private val appCoroutineScope: AppCoroutineScope
+) : TcpSocketManager {
     private var socket: Socket? = null
 
     private var server: ServerSocket? = null
+
+    private var serverJob: Job? = null
 
     private var inputStream: DataInputStream? = null
 
@@ -28,14 +35,18 @@ class TcpSocketManagerV1 : TcpSocketManager {
 
         onReady(getLocalIpAddress().orEmpty(), port)
 
-        try {
-            socket = server?.accept()
-
-            onClientConnected()
-
-            setupClientIO()
-        } catch (e: SocketException) {
-            e.printStackTrace()
+        serverJob = appCoroutineScope.launchIO {
+            while(isActive) {
+                try {
+                    listenForClientConnection { ip, port ->
+                        onClientConnected()
+                    }
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    close()
+                    break
+                }
+            }
         }
     }
 
@@ -63,9 +74,20 @@ class TcpSocketManagerV1 : TcpSocketManager {
             closeClientIO()
             socket?.close()
             server?.close()
+            closeServerJob()
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun listenForClientConnection(
+        onClientConnected: (ip: String, port: Int) -> Unit,
+    ) {
+        val client = server?.accept() ?: return
+
+        onClientConnected(client.inetAddress.hostAddress.orEmpty(), client.port)
+
+        client.close()
     }
 
     private fun setupClientIO() {
@@ -77,5 +99,10 @@ class TcpSocketManagerV1 : TcpSocketManager {
     private fun closeClientIO() {
         inputStream?.close()
         outputStream?.close()
+    }
+
+    private fun closeServerJob() {
+        serverJob?.cancel()
+        serverJob = null
     }
 }
